@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"golang.org/x/sync/errgroup"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -590,15 +591,20 @@ func (h *httpBroker) Publish(topic string, msg *Message, opts ...PublishOption) 
 			// broadcast version means broadcast to all nodes
 			case broadcastVersion:
 				var success bool
+				group, _ := errgroup.WithContext(context.Background())
 
 				// publish to all nodes
 				for _, node := range nodes {
-					// publish async
-					if err := pub(node, topic, b); err == nil {
-						success = true
-					}
+					temp := node
+					group.Go(func() error {
+						// publish async
+						return pub(temp, topic, b)
+					})
 				}
-
+				err := group.Wait()
+				if err == nil {
+					success = true
+				}
 				// save if it failed to publish at least once
 				if !success {
 					h.saveMessage(topic, b)
