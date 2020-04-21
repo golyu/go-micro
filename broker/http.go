@@ -590,7 +590,6 @@ func (h *httpBroker) Publish(topic string, msg *Message, opts ...PublishOption) 
 			switch service.Version {
 			// broadcast version means broadcast to all nodes
 			case broadcastVersion:
-				//var success bool
 				var retryCount = 10
 			RETRY:
 				group, _ := errgroup.WithContext(context.Background())
@@ -603,20 +602,14 @@ func (h *httpBroker) Publish(topic string, msg *Message, opts ...PublishOption) 
 					})
 				}
 				err := group.Wait()
-				if err == nil {
+				if err != nil {
 					if retryCount <= 0 {
-						fmt.Printf("重试10次都失败")
+						fmt.Printf("重试10次都失败%v\n", err)
 					} else {
 						retryCount--
 						goto RETRY
 					}
-					//success = true
 				}
-				// save if it failed to publish at least once
-				// 不做保存后续发送了,这里前面重试10次,非要发送成功
-				//if !success {
-				//	h.saveMessage(topic, b)
-				//}
 			default:
 				// select node to publish to
 				node := nodes[rand.Int()%len(nodes)]
