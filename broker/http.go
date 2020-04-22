@@ -67,7 +67,7 @@ type httpEvent struct {
 
 var (
 	DefaultPath      = "/"
-	DefaultAddress   = "127.0.0.1:0"
+	DefaultAddress   = ":0"
 	serviceName      = "micro.http.broker"
 	broadcastVersion = "ff.http.broadcast"
 	registerTTL      = time.Minute
