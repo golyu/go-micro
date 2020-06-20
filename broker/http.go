@@ -563,7 +563,7 @@ func (h *httpBroker) Publish(topic string, msg *Message, opts ...PublishOption) 
 		r.Body.Close()
 		return nil
 	}
-
+	var pubErr error
 	srv := func(s []*registry.Service, b []byte) {
 		for _, service := range s {
 			var nodes []*registry.Node
@@ -604,6 +604,7 @@ func (h *httpBroker) Publish(topic string, msg *Message, opts ...PublishOption) 
 				err := group.Wait()
 				if err != nil {
 					if retryCount <= 0 {
+						pubErr = err
 						fmt.Printf("重试10次都失败%v\n", err)
 					} else {
 						retryCount--
@@ -640,8 +641,7 @@ func (h *httpBroker) Publish(topic string, msg *Message, opts ...PublishOption) 
 			}
 		}
 	}()
-
-	return nil
+	return pubErr
 }
 
 func (h *httpBroker) Subscribe(topic string, handler Handler, opts ...SubscribeOption) (Subscriber, error) {
